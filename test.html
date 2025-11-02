@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Binance API Test</title>
+    <style>
+        body {
+            font-family: monospace;
+            background: #0a0e13;
+            color: #00ff88;
+            padding: 2rem;
+        }
+        .test-section {
+            background: #0f1419;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            border: 1px solid #1a1f26;
+            border-radius: 8px;
+        }
+        h2 { color: #00ff88; }
+        pre {
+            background: #000;
+            padding: 1rem;
+            overflow-x: auto;
+            border-radius: 4px;
+        }
+        .success { color: #00ff88; }
+        .error { color: #ff4444; }
+        .loading { color: #ffa500; }
+        button {
+            background: #00ff88;
+            color: #0a0e13;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Binance API 連接測試</h1>
+
+    <div class="test-section">
+        <h2>測試 1: REST API - 獲取 K 線數據</h2>
+        <button onclick="testKlineAPI()">測試 K 線 API</button>
+        <div id="kline-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>測試 2: REST API - 獲取 24 小時價格</h2>
+        <button onclick="testTickerAPI()">測試 Ticker API</button>
+        <div id="ticker-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>測試 3: WebSocket - 實時數據流</h2>
+        <button onclick="testWebSocket()">測試 WebSocket</button>
+        <button onclick="stopWebSocket()">停止 WebSocket</button>
+        <div id="ws-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>瀏覽器信息</h2>
+        <pre id="browser-info"></pre>
+    </div>
+
+    <script>
+        const BINANCE_API = 'https://api.binance.com/api/v3';
+        const BINANCE_WS = 'wss://stream.binance.com:9443/ws';
+        let testWs = null;
+
+        // Display browser info
+        document.getElementById('browser-info').textContent = `
+瀏覽器: ${navigator.userAgent}
+協議: ${window.location.protocol}
+主機: ${window.location.host || '(本地文件)'}
+        `.trim();
+
+        // Test Kline API
+        async function testKlineAPI() {
+            const result = document.getElementById('kline-result');
+            result.innerHTML = '<p class="loading">⏳ 測試中...</p>';
+
+            try {
+                const url = `${BINANCE_API}/klines?symbol=BTCUSDT&interval=1h&limit=5`;
+                console.log('Fetching:', url);
+
+                const response = await fetch(url);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+
+                result.innerHTML = `
+                    <p class="success">✅ 成功！收到 ${data.length} 根 K 線</p>
+                    <pre>${JSON.stringify(data[0], null, 2)}</pre>
+                    <p>第一根 K 線價格: ${data[0][1]} - ${data[0][4]}</p>
+                `;
+            } catch (error) {
+                result.innerHTML = `
+                    <p class="error">❌ 失敗: ${error.message}</p>
+                    <pre>${error.stack}</pre>
+                `;
+            }
+        }
+
+        // Test Ticker API
+        async function testTickerAPI() {
+            const result = document.getElementById('ticker-result');
+            result.innerHTML = '<p class="loading">⏳ 測試中...</p>';
+
+            try {
+                const url = `${BINANCE_API}/ticker/24hr?symbol=BTCUSDT`;
+                console.log('Fetching:', url);
+
+                const response = await fetch(url);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+
+                result.innerHTML = `
+                    <p class="success">✅ 成功！</p>
+                    <pre>${JSON.stringify({
+                        symbol: data.symbol,
+                        lastPrice: data.lastPrice,
+                        priceChange: data.priceChange,
+                        priceChangePercent: data.priceChangePercent,
+                        volume: data.volume
+                    }, null, 2)}</pre>
+                    <p>當前價格: $${parseFloat(data.lastPrice).toLocaleString()}</p>
+                    <p>24h 變化: ${data.priceChangePercent}%</p>
+                `;
+            } catch (error) {
+                result.innerHTML = `
+                    <p class="error">❌ 失敗: ${error.message}</p>
+                    <pre>${error.stack}</pre>
+                `;
+            }
+        }
+
+        // Test WebSocket
+        function testWebSocket() {
+            const result = document.getElementById('ws-result');
+            result.innerHTML = '<p class="loading">⏳ 連接 WebSocket...</p>';
+
+            try {
+                const wsUrl = `${BINANCE_WS}/btcusdt@kline_1m`;
+                console.log('Connecting to:', wsUrl);
+
+                testWs = new WebSocket(wsUrl);
+                let messageCount = 0;
+
+                testWs.onopen = () => {
+                    result.innerHTML = '<p class="success">✅ WebSocket 已連接！等待數據...</p>';
+                };
+
+                testWs.onmessage = (event) => {
+                    messageCount++;
+                    const data = JSON.parse(event.data);
+                    const kline = data.k;
+
+                    result.innerHTML = `
+                        <p class="success">✅ WebSocket 運行中 (已收到 ${messageCount} 條消息)</p>
+                        <pre>${JSON.stringify({
+                            symbol: kline.s,
+                            interval: kline.i,
+                            open: kline.o,
+                            high: kline.h,
+                            low: kline.l,
+                            close: kline.c,
+                            volume: kline.v,
+                            isClosed: kline.x
+                        }, null, 2)}</pre>
+                        <p>當前價格: $${parseFloat(kline.c).toLocaleString()}</p>
+                    `;
+                };
+
+                testWs.onerror = (error) => {
+                    result.innerHTML += `<p class="error">❌ WebSocket 錯誤: ${error}</p>`;
+                };
+
+                testWs.onclose = () => {
+                    result.innerHTML += '<p class="loading">🔌 WebSocket 已關閉</p>';
+                };
+
+            } catch (error) {
+                result.innerHTML = `
+                    <p class="error">❌ 失敗: ${error.message}</p>
+                    <pre>${error.stack}</pre>
+                `;
+            }
+        }
+
+        function stopWebSocket() {
+            if (testWs) {
+                testWs.close();
+                testWs = null;
+            }
+        }
+
+        // Clean up on page unload
+        window.addEventListener('beforeunload', () => {
+            if (testWs) testWs.close();
+        });
+    </script>
+</body>
+</html>

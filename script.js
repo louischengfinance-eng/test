@@ -7,6 +7,9 @@ let currentSymbol = 'BTCUSDT';
 let currentInterval = '4h';
 let ws = null;
 let klineData = [];
+let chart = null;
+let candlestickSeries = null;
+let volumeSeries = null;
 
 // Interval mapping for Binance API
 const intervalMap = {
@@ -19,67 +22,129 @@ const intervalMap = {
     '1w': '1w'
 };
 
-// Initialize chart
+// DOM elements
+const loadingOverlay = document.getElementById('loading-overlay');
+const errorOverlay = document.getElementById('error-overlay');
 const chartElement = document.getElementById('chart');
-const chart = LightweightCharts.createChart(chartElement, {
-    layout: {
-        background: { color: '#0f1419' },
-        textColor: '#8b8e93',
-    },
-    grid: {
-        vertLines: { color: '#1a1f26' },
-        horzLines: { color: '#1a1f26' },
-    },
-    crosshair: {
-        mode: LightweightCharts.CrosshairMode.Normal,
-        vertLine: {
-            color: '#00ff88',
-            width: 1,
-            style: LightweightCharts.LineStyle.Dashed,
-        },
-        horzLine: {
-            color: '#00ff88',
-            width: 1,
-            style: LightweightCharts.LineStyle.Dashed,
-        },
-    },
-    rightPriceScale: {
-        borderColor: '#1a1f26',
-    },
-    timeScale: {
-        borderColor: '#1a1f26',
-        timeVisible: true,
-        secondsVisible: false,
-    },
-});
 
-// Create candlestick series
-const candlestickSeries = chart.addCandlestickSeries({
-    upColor: '#00ff88',
-    downColor: '#ff4444',
-    borderUpColor: '#00ff88',
-    borderDownColor: '#ff4444',
-    wickUpColor: '#00ff88',
-    wickDownColor: '#ff4444',
-});
+// Show/Hide loading
+function showLoading() {
+    if (loadingOverlay) loadingOverlay.style.display = 'flex';
+    if (errorOverlay) errorOverlay.style.display = 'none';
+    console.log('📊 Loading...');
+}
 
-// Create volume series
-const volumeSeries = chart.addHistogramSeries({
-    color: '#26a69a',
-    priceFormat: {
-        type: 'volume',
-    },
-    priceScaleId: '',
-    scaleMargins: {
-        top: 0.8,
-        bottom: 0,
-    },
-});
+function hideLoading() {
+    if (loadingOverlay) loadingOverlay.style.display = 'none';
+    console.log('✅ Loading complete');
+}
+
+// Show error
+function showError(message) {
+    console.error('❌ Error:', message);
+    if (errorOverlay) {
+        const errorText = errorOverlay.querySelector('.error-text');
+        if (errorText) errorText.textContent = message;
+        errorOverlay.style.display = 'flex';
+    }
+    if (loadingOverlay) loadingOverlay.style.display = 'none';
+}
+
+// Initialize chart
+function initChart() {
+    console.log('🎨 Initializing chart...');
+
+    chart = LightweightCharts.createChart(chartElement, {
+        width: chartElement.clientWidth,
+        height: chartElement.clientHeight,
+        layout: {
+            background: { color: '#0f1419' },
+            textColor: '#8b8e93',
+        },
+        grid: {
+            vertLines: { color: '#1a1f26' },
+            horzLines: { color: '#1a1f26' },
+        },
+        crosshair: {
+            mode: LightweightCharts.CrosshairMode.Normal,
+            vertLine: {
+                color: '#00ff88',
+                width: 1,
+                style: LightweightCharts.LineStyle.Dashed,
+            },
+            horzLine: {
+                color: '#00ff88',
+                width: 1,
+                style: LightweightCharts.LineStyle.Dashed,
+            },
+        },
+        rightPriceScale: {
+            borderColor: '#1a1f26',
+        },
+        timeScale: {
+            borderColor: '#1a1f26',
+            timeVisible: true,
+            secondsVisible: false,
+        },
+    });
+
+    // Create candlestick series
+    candlestickSeries = chart.addCandlestickSeries({
+        upColor: '#00ff88',
+        downColor: '#ff4444',
+        borderUpColor: '#00ff88',
+        borderDownColor: '#ff4444',
+        wickUpColor: '#00ff88',
+        wickDownColor: '#ff4444',
+    });
+
+    // Create volume series
+    volumeSeries = chart.addHistogramSeries({
+        color: '#26a69a',
+        priceFormat: {
+            type: 'volume',
+        },
+        priceScaleId: '',
+        scaleMargins: {
+            top: 0.8,
+            bottom: 0,
+        },
+    });
+
+    // Update stats on crosshair move
+    chart.subscribeCrosshairMove((param) => {
+        if (param.time) {
+            const data = param.seriesData.get(candlestickSeries);
+            const volumePoint = param.seriesData.get(volumeSeries);
+
+            if (data) {
+                const symbol = currentSymbol.replace('USDT', '');
+                updateStatsDisplay(data, volumePoint, symbol);
+            }
+        }
+    });
+
+    console.log('✅ Chart initialized');
+}
+
+// Update stats display
+function updateStatsDisplay(candle, volume, symbol) {
+    document.getElementById('open').textContent = '$' + candle.open.toLocaleString('en-US', {minimumFractionDigits: 2});
+    document.getElementById('high').textContent = '$' + candle.high.toLocaleString('en-US', {minimumFractionDigits: 2});
+    document.getElementById('low').textContent = '$' + candle.low.toLocaleString('en-US', {minimumFractionDigits: 2});
+    document.getElementById('close').textContent = '$' + candle.close.toLocaleString('en-US', {minimumFractionDigits: 2});
+
+    if (volume) {
+        document.getElementById('volume').textContent = volume.value.toFixed(2) + ' ' + symbol;
+    }
+}
 
 // Fetch historical kline data from Binance
 async function fetchKlineData(symbol, interval, limit = 500) {
     try {
         const url = `${BINANCE_API_BASE}/klines?symbol=${symbol}&interval=${interval}&limit=${limit}`;
+        console.log(`📡 Fetching data from: ${url}`);
+
         const response = await fetch(url);
 
         if (!response.ok) {
@@ -87,6 +152,7 @@ async function fetchKlineData(symbol, interval, limit = 500) {
         }
 
         const data = await response.json();
+        console.log(`✅ Received ${data.length} candles`);
 
         // Transform Binance data to chart format
         const candleData = data.map(candle => ({
@@ -104,11 +170,13 @@ async function fetchKlineData(symbol, interval, limit = 500) {
                 'rgba(0, 255, 136, 0.5)' : 'rgba(255, 68, 68, 0.5)'
         }));
 
+        console.log('📊 First candle:', candleData[0]);
+        console.log('📊 Last candle:', candleData[candleData.length - 1]);
+
         return { candleData, volumeData };
     } catch (error) {
-        console.error('Error fetching kline data:', error);
-        showError('無法獲取市場數據，請稍後重試');
-        return null;
+        console.error('❌ Error fetching kline data:', error);
+        throw new Error(`無法從 Binance 獲取數據: ${error.message}\n\n請確保:\n1. 您的網絡連接正常\n2. 使用本地服務器運行 (python -m http.server)\n3. 瀏覽器允許訪問 Binance API`);
     }
 }
 
@@ -117,10 +185,17 @@ async function fetch24hrTicker(symbol) {
     try {
         const url = `${BINANCE_API_BASE}/ticker/24hr?symbol=${symbol}`;
         const response = await fetch(url);
+
+        if (!response.ok) {
+            console.warn(`⚠️ Failed to fetch ticker for ${symbol}`);
+            return null;
+        }
+
         const data = await response.json();
+        console.log(`💰 Ticker for ${symbol}:`, data.lastPrice);
         return data;
     } catch (error) {
-        console.error('Error fetching ticker data:', error);
+        console.error('❌ Error fetching ticker data:', error);
         return null;
     }
 }
@@ -129,14 +204,18 @@ async function fetch24hrTicker(symbol) {
 function initWebSocket(symbol, interval) {
     // Close existing connection if any
     if (ws) {
+        console.log('🔌 Closing existing WebSocket...');
         ws.close();
     }
 
     const stream = `${symbol.toLowerCase()}@kline_${interval}`;
-    ws = new WebSocket(`${BINANCE_WS_BASE}/${stream}`);
+    const wsUrl = `${BINANCE_WS_BASE}/${stream}`;
+    console.log(`🔌 Connecting to WebSocket: ${wsUrl}`);
+
+    ws = new WebSocket(wsUrl);
 
     ws.onopen = () => {
-        console.log('WebSocket connected:', stream);
+        console.log('✅ WebSocket connected:', stream);
     };
 
     ws.onmessage = (event) => {
@@ -160,28 +239,30 @@ function initWebSocket(symbol, interval) {
         };
 
         // Update chart
-        candlestickSeries.update(candle);
-        volumeSeries.update(volume);
+        if (candlestickSeries && volumeSeries) {
+            candlestickSeries.update(candle);
+            volumeSeries.update(volume);
 
-        // Update last candle in our data array
-        if (klineData.length > 0) {
-            klineData[klineData.length - 1] = candle;
+            // Update last candle in our data array
+            if (klineData.length > 0) {
+                klineData[klineData.length - 1] = candle;
+            }
+
+            // Update stats in real-time
+            updateStats(candle, volume);
         }
-
-        // Update stats in real-time
-        updateStats(candle, volume);
     };
 
     ws.onerror = (error) => {
-        console.error('WebSocket error:', error);
+        console.error('❌ WebSocket error:', error);
     };
 
     ws.onclose = () => {
-        console.log('WebSocket disconnected');
+        console.log('🔌 WebSocket disconnected');
         // Attempt to reconnect after 5 seconds
         setTimeout(() => {
-            if (ws.readyState === WebSocket.CLOSED) {
-                console.log('Attempting to reconnect...');
+            if (ws && ws.readyState === WebSocket.CLOSED) {
+                console.log('🔄 Attempting to reconnect...');
                 initWebSocket(symbol, interval);
             }
         }, 5000);
@@ -219,40 +300,49 @@ async function loadMarket(symbol, interval) {
     currentSymbol = symbol;
     currentInterval = interval;
 
-    console.log(`Loading market: ${symbol} - ${interval}`);
+    console.log(`\n🚀 Loading market: ${symbol} - ${interval}`);
 
     // Show loading state
     showLoading();
 
-    // Fetch historical data
-    const data = await fetchKlineData(symbol, interval);
+    try {
+        // Fetch historical data
+        const data = await fetchKlineData(symbol, interval);
 
-    if (data) {
-        klineData = data.candleData;
+        if (data && data.candleData && data.candleData.length > 0) {
+            klineData = data.candleData;
 
-        // Set chart data
-        candlestickSeries.setData(data.candleData);
-        volumeSeries.setData(data.volumeData);
+            // Set chart data
+            console.log('📈 Setting chart data...');
+            candlestickSeries.setData(data.candleData);
+            volumeSeries.setData(data.volumeData);
 
-        // Fit content
-        chart.timeScale().fitContent();
+            // Fit content
+            chart.timeScale().fitContent();
 
-        // Update initial stats
-        const lastCandle = data.candleData[data.candleData.length - 1];
-        const lastVolume = data.volumeData[data.volumeData.length - 1];
-        updateStats(lastCandle, lastVolume);
+            // Update initial stats
+            const lastCandle = data.candleData[data.candleData.length - 1];
+            const lastVolume = data.volumeData[data.volumeData.length - 1];
+            updateStats(lastCandle, lastVolume);
 
-        // Initialize WebSocket for real-time updates
-        initWebSocket(symbol, interval);
+            // Initialize WebSocket for real-time updates
+            initWebSocket(symbol, interval);
 
-        // Fetch and update 24hr ticker
-        const ticker = await fetch24hrTicker(symbol);
-        if (ticker) {
-            updateTickerInfo(ticker);
+            // Fetch and update 24hr ticker
+            const ticker = await fetch24hrTicker(symbol);
+            if (ticker) {
+                updateTickerInfo(ticker);
+            }
+
+            hideLoading();
+            console.log('✅ Market loaded successfully\n');
+        } else {
+            throw new Error('No data received from API');
         }
+    } catch (error) {
+        console.error('❌ Failed to load market:', error);
+        showError(error.message);
     }
-
-    hideLoading();
 }
 
 // Update ticker information
@@ -263,50 +353,14 @@ function updateTickerInfo(ticker) {
     priceChangeEl.className = 'pair-change ' + (change >= 0 ? 'positive' : 'negative');
 }
 
-// Show loading state
-function showLoading() {
-    // You can add a loading spinner here
-    console.log('Loading...');
-}
-
-// Hide loading state
-function hideLoading() {
-    console.log('Loading complete');
-}
-
-// Show error message
-function showError(message) {
-    console.error(message);
-    alert(message);
-}
-
-// Update stats on crosshair move
-chart.subscribeCrosshairMove((param) => {
-    if (param.time) {
-        const data = param.seriesData.get(candlestickSeries);
-        const volumePoint = param.seriesData.get(volumeSeries);
-
-        if (data) {
-            const symbol = currentSymbol.replace('USDT', '');
-
-            document.getElementById('open').textContent = '$' + data.open.toLocaleString('en-US', {minimumFractionDigits: 2});
-            document.getElementById('high').textContent = '$' + data.high.toLocaleString('en-US', {minimumFractionDigits: 2});
-            document.getElementById('low').textContent = '$' + data.low.toLocaleString('en-US', {minimumFractionDigits: 2});
-            document.getElementById('close').textContent = '$' + data.close.toLocaleString('en-US', {minimumFractionDigits: 2});
-
-            if (volumePoint) {
-                document.getElementById('volume').textContent = volumePoint.value.toFixed(2) + ' ' + symbol;
-            }
-        }
-    }
-});
-
 // Handle window resize
 window.addEventListener('resize', () => {
-    chart.applyOptions({
-        width: chartElement.clientWidth,
-        height: chartElement.clientHeight
-    });
+    if (chart) {
+        chart.applyOptions({
+            width: chartElement.clientWidth,
+            height: chartElement.clientHeight
+        });
+    }
 });
 
 // Timeframe selector functionality
@@ -318,6 +372,7 @@ document.querySelectorAll('.timeframe-btn').forEach(btn => {
         const timeframe = btn.dataset.timeframe;
         const interval = intervalMap[timeframe];
 
+        console.log(`⏱️ Changing timeframe to ${timeframe}`);
         loadMarket(currentSymbol, interval);
     });
 });
@@ -333,6 +388,7 @@ document.querySelectorAll('.market-item').forEach(item => {
 
         // Convert display name to Binance symbol
         const symbol = marketName.replace('/', '') + 'T'; // BTC/USD -> BTCUSDT
+        console.log(`💱 Switching to ${symbol}`);
         loadMarket(symbol, currentInterval);
     });
 });
@@ -363,11 +419,11 @@ async function updateMarketList() {
             }
         }
     } catch (error) {
-        console.error('Error updating market list:', error);
+        console.error('❌ Error updating market list:', error);
     }
 }
 
-// Animate order book (still simulated, you can integrate real orderbook data)
+// Animate order book (still simulated)
 function animateOrderBook() {
     const asks = document.querySelectorAll('.asks .order-row');
     const bids = document.querySelectorAll('.bids .order-row');
@@ -394,15 +450,32 @@ setInterval(() => {
 }, 10000); // Update every 10 seconds
 
 // Initial load
-console.log('Initializing Hyperliquid-style K-line chart with Binance API...');
+console.log('='.repeat(50));
+console.log('🚀 Hyperliquid-style K-line Chart');
+console.log('📊 Initializing with Binance API...');
+console.log('='.repeat(50));
 
-// Load initial market data
-loadMarket(currentSymbol, currentInterval);
+// Wait for DOM to be fully loaded
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initialize);
+} else {
+    initialize();
+}
 
-// Initial market list update
-updateMarketList();
+function initialize() {
+    console.log('🎬 Starting initialization...');
 
-// Initial orderbook animation
-animateOrderBook();
+    // Initialize chart
+    initChart();
 
-console.log('Chart loaded successfully with live Binance data!');
+    // Load initial market data
+    loadMarket(currentSymbol, currentInterval);
+
+    // Initial market list update
+    updateMarketList();
+
+    // Initial orderbook animation
+    animateOrderBook();
+
+    console.log('✅ Initialization complete!');
+}
