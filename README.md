@@ -35,16 +35,16 @@
 
 ```bash
 # 使用 Python
-python -m http.server 8000
+python -m http.server 9000
 
 # 或使用 Node.js
-npx http-server
+npx http-server -p 9000
 
 # 或使用 PHP
-php -S localhost:8000
+php -S localhost:9000
 ```
 
-然後在瀏覽器中訪問 `http://localhost:8000`
+然後在瀏覽器中訪問 `http://localhost:9000`
 
 ## 項目結構
 
