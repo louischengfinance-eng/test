@@ -2,13 +2,19 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#0a0e13">
     <title>Hyperliquid Style - TradingView Widget</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
         <header class="header">
+            <button class="mobile-menu-toggle" id="mobileMenuBtn" aria-label="Open Menu">
+                ☰
+            </button>
             <div class="logo">
                 <h1>HYPERLIQUID</h1>
             </div>
@@ -22,8 +28,14 @@
             </div>
         </header>
 
+        <!-- Mobile Overlay -->
+        <div class="mobile-overlay" id="mobileOverlay"></div>
+
         <div class="main-content">
-            <div class="left-panel">
+            <div class="left-panel" id="leftPanel">
+                <button class="mobile-close-btn" id="mobileCloseBtn" aria-label="Close Menu">
+                    ✕
+                </button>
                 <div class="market-list">
                     <h3>Markets</h3>
                     <div class="market-item active" data-symbol="BTCUSDT">
@@ -254,6 +266,46 @@
             });
         }
 
+        // Mobile Menu Functionality
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const mobileCloseBtn = document.getElementById('mobileCloseBtn');
+        const mobileOverlay = document.getElementById('mobileOverlay');
+        const leftPanel = document.getElementById('leftPanel');
+
+        function openMobileMenu() {
+            leftPanel.classList.add('active');
+            mobileOverlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeMobileMenu() {
+            leftPanel.classList.remove('active');
+            mobileOverlay.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        if (mobileMenuBtn) {
+            mobileMenuBtn.addEventListener('click', openMobileMenu);
+        }
+
+        if (mobileCloseBtn) {
+            mobileCloseBtn.addEventListener('click', closeMobileMenu);
+        }
+
+        if (mobileOverlay) {
+            mobileOverlay.addEventListener('click', closeMobileMenu);
+        }
+
+        // Close menu when market item is clicked on mobile
+        document.querySelectorAll('.market-item').forEach(item => {
+            item.addEventListener('click', function(e) {
+                // Close mobile menu if open
+                if (window.innerWidth <= 768) {
+                    closeMobileMenu();
+                }
+            });
+        });
+
         // Initialize on load
         window.addEventListener('load', function() {
             console.log('🚀 Initializing TradingView widget...');
@@ -266,6 +318,18 @@
 
             // Animate orderbook
             setInterval(animateOrderBook, 2000);
+
+            console.log('📱 Mobile menu initialized');
+        });
+
+        // Handle orientation change
+        window.addEventListener('orientationchange', function() {
+            setTimeout(() => {
+                if (tvWidget) {
+                    // TradingView widget will auto-resize
+                    console.log('📱 Orientation changed');
+                }
+            }, 100);
         });
     </script>
 </body>

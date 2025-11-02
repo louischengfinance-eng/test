@@ -540,3 +540,58 @@ function initialize() {
         console.log('✅ Initialization complete!');
     }, 100);
 }
+
+// Mobile Menu Functionality
+const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+const mobileCloseBtn = document.getElementById('mobileCloseBtn');
+const mobileOverlay = document.getElementById('mobileOverlay');
+const leftPanel = document.getElementById('leftPanel');
+
+function openMobileMenu() {
+    leftPanel.classList.add('active');
+    mobileOverlay.classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeMobileMenu() {
+    leftPanel.classList.remove('active');
+    mobileOverlay.classList.remove('active');
+    document.body.style.overflow = '';
+}
+
+if (mobileMenuBtn) {
+    mobileMenuBtn.addEventListener('click', openMobileMenu);
+}
+
+if (mobileCloseBtn) {
+    mobileCloseBtn.addEventListener('click', closeMobileMenu);
+}
+
+if (mobileOverlay) {
+    mobileOverlay.addEventListener('click', closeMobileMenu);
+}
+
+// Close menu when market item is clicked on mobile
+document.querySelectorAll('.market-item').forEach(item => {
+    const originalClickHandler = item.onclick;
+    item.addEventListener('click', function(e) {
+        // Close mobile menu if open
+        if (window.innerWidth <= 768) {
+            closeMobileMenu();
+        }
+    });
+});
+
+// Handle orientation change
+window.addEventListener('orientationchange', function() {
+    setTimeout(() => {
+        if (chart) {
+            chart.applyOptions({
+                width: chartElement.clientWidth,
+                height: chartElement.clientHeight
+            });
+        }
+    }, 100);
+});
+
+console.log('📱 Mobile menu initialized');

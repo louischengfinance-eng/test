@@ -369,6 +369,47 @@ body {
     background: #3a3f46;
 }
 
+/* Mobile Menu Toggle */
+.mobile-menu-toggle {
+    display: none;
+    background: transparent;
+    border: none;
+    color: #00ff88;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    z-index: 1001;
+}
+
+.mobile-close-btn {
+    display: none;
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: transparent;
+    border: none;
+    color: #e0e3e7;
+    font-size: 1.5rem;
+    cursor: pointer;
+    z-index: 1002;
+}
+
+/* Mobile Overlay */
+.mobile-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 999;
+}
+
+.mobile-overlay.active {
+    display: block;
+}
+
 /* Responsive Design */
 @media (max-width: 1200px) {
     .main-content {
@@ -376,26 +417,290 @@ body {
     }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 968px) {
     .main-content {
-        grid-template-columns: 1fr;
+        grid-template-columns: 180px 1fr;
     }
 
-    .left-panel,
+    .right-panel {
+        display: none;
+    }
+}
+
+@media (max-width: 768px) {
+    /* Mobile Menu */
+    .mobile-menu-toggle {
+        display: block;
+    }
+
+    /* Header Mobile */
+    .header {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem 1rem;
+        flex-wrap: wrap;
+    }
+
+    .logo h1 {
+        font-size: 1.2rem;
+    }
+
+    .trading-pair {
+        order: 3;
+        width: 100%;
+        margin-top: 0.5rem;
+        gap: 0.75rem;
+        font-size: 0.9rem;
+    }
+
+    .pair-price {
+        font-size: 1.2rem;
+    }
+
+    .header-right {
+        order: 2;
+    }
+
+    .btn-primary {
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+    }
+
+    /* Main Content */
+    .main-content {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+
+    /* Left Panel - Slide Menu */
+    .left-panel {
+        position: fixed;
+        left: -100%;
+        top: 0;
+        bottom: 0;
+        width: 280px;
+        max-width: 85vw;
+        background: #0f1419;
+        z-index: 1000;
+        transition: left 0.3s ease;
+        overflow-y: auto;
+        padding-top: 3rem;
+        border-right: 1px solid #1a1f26;
+    }
+
+    .left-panel.active {
+        left: 0;
+    }
+
+    .mobile-close-btn {
+        display: block;
+    }
+
     .right-panel {
         display: none;
     }
 
-    .header {
-        flex-direction: column;
-        gap: 1rem;
-        align-items: flex-start;
+    /* Chart Container */
+    .chart-container {
+        width: 100%;
+        min-height: 400px;
+    }
+
+    #chart {
+        min-height: 400px;
+        height: 400px;
     }
 
     .chart-header {
         flex-direction: column;
-        align-items: flex-start;
+        align-items: stretch;
+        gap: 0.75rem;
+        padding: 0.75rem;
+    }
+
+    .timeframe-selector {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        display: flex;
+        gap: 0.5rem;
+        padding-bottom: 0.5rem;
+    }
+
+    .timeframe-btn {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.85rem;
+        white-space: nowrap;
+        min-width: 44px; /* Touch target size */
+        text-align: center;
+    }
+
+    .chart-tools {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .tool-btn {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.85rem;
+        flex: 1;
+        min-width: 44px;
+    }
+
+    .chart-stats {
+        flex-wrap: wrap;
         gap: 1rem;
+        padding: 0.75rem;
+        font-size: 0.85rem;
+    }
+
+    .stat-item {
+        min-width: 60px;
+    }
+
+    /* Market List Mobile */
+    .market-list h3 {
+        font-size: 0.9rem;
+    }
+
+    .market-item {
+        padding: 0.75rem;
+        margin-bottom: 0.5rem;
+        min-height: 60px;
+        display: flex;
+        align-items: center;
+    }
+
+    .market-info {
+        flex: 1;
+    }
+
+    .market-name {
+        font-size: 1rem;
+    }
+
+    .market-price {
+        font-size: 0.85rem;
+    }
+
+    .market-change {
+        font-size: 0.85rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-weight: 600;
+    }
+
+    /* Loading and Error Overlays */
+    .loading-text,
+    .error-text {
+        font-size: 0.9rem;
+        padding: 0 1rem;
+    }
+
+    .retry-btn {
+        padding: 0.5rem 1.5rem;
+    }
+}
+
+/* Extra Small Devices */
+@media (max-width: 480px) {
+    .header {
+        padding: 0.5rem 0.75rem;
+    }
+
+    .logo h1 {
+        font-size: 1rem;
+        letter-spacing: 1px;
+    }
+
+    .trading-pair {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .pair-name {
+        font-size: 0.9rem;
+    }
+
+    .pair-price {
+        font-size: 1rem;
+    }
+
+    .pair-change {
+        font-size: 0.75rem;
+        padding: 0.2rem 0.5rem;
+    }
+
+    #chart {
+        min-height: 350px;
+        height: 350px;
+    }
+
+    .chart-stats {
+        gap: 0.75rem;
+        padding: 0.5rem;
+    }
+
+    .stat-value {
+        font-size: 0.85rem;
+    }
+
+    .timeframe-btn {
+        padding: 0.4rem 0.6rem;
+        font-size: 0.8rem;
+        min-width: 40px;
+    }
+
+    .left-panel {
+        width: 100%;
+        max-width: 100%;
+    }
+}
+
+/* Landscape Mobile */
+@media (max-width: 968px) and (orientation: landscape) {
+    #chart {
+        height: 350px;
+        min-height: 350px;
+    }
+
+    .header {
+        padding: 0.5rem 1rem;
+    }
+
+    .trading-pair {
+        margin-top: 0;
+    }
+}
+
+/* Touch Improvements */
+@media (hover: none) and (pointer: coarse) {
+    /* Increase touch target sizes */
+    .timeframe-btn,
+    .tool-btn,
+    .market-item,
+    .btn-primary {
+        min-height: 44px;
+        min-width: 44px;
+    }
+
+    /* Remove hover effects on touch devices */
+    .timeframe-btn:hover,
+    .tool-btn:hover,
+    .market-item:hover {
+        transform: none;
+    }
+
+    /* Add active states for touch feedback */
+    .timeframe-btn:active,
+    .tool-btn:active,
+    .btn-primary:active {
+        transform: scale(0.95);
+        opacity: 0.8;
+    }
+
+    .market-item:active {
+        background: rgba(255, 255, 255, 0.1);
     }
 }
 
