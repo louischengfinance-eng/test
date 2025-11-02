@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hyperliquid Style - TradingView Widget</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="logo">
+                <h1>HYPERLIQUID</h1>
+            </div>
+            <div class="trading-pair">
+                <span class="pair-name">BTC/USDT</span>
+                <span class="pair-price" id="currentPrice">--</span>
+                <span class="pair-change positive" id="priceChange">--</span>
+            </div>
+            <div class="header-right">
+                <button class="btn-primary">Connect Wallet</button>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <div class="left-panel">
+                <div class="market-list">
+                    <h3>Markets</h3>
+                    <div class="market-item active" data-symbol="BTCUSDT">
+                        <div class="market-info">
+                            <span class="market-name">BTC/USDT</span>
+                            <span class="market-price">--</span>
+                        </div>
+                        <span class="market-change">--</span>
+                    </div>
+                    <div class="market-item" data-symbol="ETHUSDT">
+                        <div class="market-info">
+                            <span class="market-name">ETH/USDT</span>
+                            <span class="market-price">--</span>
+                        </div>
+                        <span class="market-change">--</span>
+                    </div>
+                    <div class="market-item" data-symbol="SOLUSDT">
+                        <div class="market-info">
+                            <span class="market-name">SOL/USDT</span>
+                            <span class="market-price">--</span>
+                        </div>
+                        <span class="market-change">--</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <div class="chart-header">
+                    <div class="timeframe-selector">
+                        <span style="color: #8b8e93; font-size: 0.9rem;">使用 TradingView 專業圖表 - 點擊圖表內按鈕切換時間週期</span>
+                    </div>
+                    <div class="chart-tools">
+                        <button class="tool-btn" onclick="toggleFullscreen()">🔍 全屏</button>
+                    </div>
+                </div>
+                <!-- TradingView Widget BEGIN -->
+                <div id="tradingview_chart"></div>
+                <!-- TradingView Widget END -->
+            </div>
+
+            <div class="right-panel">
+                <div class="order-book">
+                    <h3>Order Book</h3>
+                    <div class="orderbook-header">
+                        <span>Price (USD)</span>
+                        <span>Size</span>
+                        <span>Total</span>
+                    </div>
+                    <div class="asks">
+                        <div class="order-row ask">
+                            <span class="price">43,285.50</span>
+                            <span class="size">0.5420</span>
+                            <span class="total">23,468.74</span>
+                        </div>
+                        <div class="order-row ask">
+                            <span class="price">43,280.00</span>
+                            <span class="size">1.2340</span>
+                            <span class="total">53,407.52</span>
+                        </div>
+                        <div class="order-row ask">
+                            <span class="price">43,275.25</span>
+                            <span class="size">0.8920</span>
+                            <span class="total">38,601.52</span>
+                        </div>
+                    </div>
+                    <div class="spread">
+                        <span class="spread-price">43,250.00</span>
+                        <span class="spread-value">Spread: 5.50</span>
+                    </div>
+                    <div class="bids">
+                        <div class="order-row bid">
+                            <span class="price">43,244.50</span>
+                            <span class="size">1.4560</span>
+                            <span class="total">62,964.03</span>
+                        </div>
+                        <div class="order-row bid">
+                            <span class="price">43,240.00</span>
+                            <span class="size">0.7820</span>
+                            <span class="total">33,813.68</span>
+                        </div>
+                        <div class="order-row bid">
+                            <span class="price">43,235.75</span>
+                            <span class="size">2.1100</span>
+                            <span class="total">91,227.43</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TradingView Widget Script -->
+    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+    <script type="text/javascript">
+        let currentSymbol = 'BINANCE:BTCUSDT';
+        let tvWidget = null;
+
+        // Initialize TradingView Widget
+        function initTradingView(symbol) {
+            const container = document.getElementById('tradingview_chart');
+
+            // Clear existing widget
+            if (tvWidget) {
+                try {
+                    tvWidget.remove();
+                } catch (e) {
+                    console.log('Widget cleanup:', e);
+                }
+            }
+
+            // Create new widget
+            tvWidget = new TradingView.widget({
+                width: '100%',
+                height: 600,
+                symbol: symbol,
+                interval: '240', // 4h
+                timezone: 'Etc/UTC',
+                theme: 'dark',
+                style: '1', // Candles
+                locale: 'zh_CN',
+                toolbar_bg: '#0f1419',
+                enable_publishing: false,
+                hide_side_toolbar: false,
+                allow_symbol_change: true,
+                container_id: 'tradingview_chart',
+                // Styling to match Hyperliquid
+                overrides: {
+                    "mainSeriesProperties.candleStyle.upColor": "#00ff88",
+                    "mainSeriesProperties.candleStyle.downColor": "#ff4444",
+                    "mainSeriesProperties.candleStyle.borderUpColor": "#00ff88",
+                    "mainSeriesProperties.candleStyle.borderDownColor": "#ff4444",
+                    "mainSeriesProperties.candleStyle.wickUpColor": "#00ff88",
+                    "mainSeriesProperties.candleStyle.wickDownColor": "#ff4444",
+                    "paneProperties.background": "#0f1419",
+                    "paneProperties.vertGridProperties.color": "#1a1f26",
+                    "paneProperties.horzGridProperties.color": "#1a1f26",
+                    "scalesProperties.textColor": "#8b8e93",
+                    "scalesProperties.lineColor": "#1a1f26",
+                },
+                studies_overrides: {},
+                disabled_features: [
+                    "header_symbol_search",
+                    "symbol_search_hot_key",
+                ],
+                enabled_features: [
+                    "hide_left_toolbar_by_default",
+                ],
+            });
+
+            console.log('✅ TradingView widget initialized for', symbol);
+        }
+
+        // Market item click
+        document.querySelectorAll('.market-item').forEach(item => {
+            item.addEventListener('click', function() {
+                document.querySelectorAll('.market-item').forEach(i => i.classList.remove('active'));
+                this.classList.add('active');
+
+                const symbol = this.getAttribute('data-symbol');
+                const displayName = this.querySelector('.market-name').textContent;
+
+                currentSymbol = 'BINANCE:' + symbol;
+                document.querySelector('.pair-name').textContent = displayName;
+
+                console.log('Switching to', currentSymbol);
+                initTradingView(currentSymbol);
+            });
+        });
+
+        // Fullscreen toggle
+        function toggleFullscreen() {
+            const chartContainer = document.querySelector('.chart-container');
+            if (!document.fullscreenElement) {
+                chartContainer.requestFullscreen().catch(err => {
+                    alert(`Error attempting to enable fullscreen: ${err.message}`);
+                });
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        // Update market prices from Binance
+        async function updateMarketPrices() {
+            const symbols = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT'];
+
+            for (const symbol of symbols) {
+                try {
+                    const response = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}`);
+                    const data = await response.json();
+
+                    const marketItem = document.querySelector(`.market-item[data-symbol="${symbol}"]`);
+                    if (marketItem) {
+                        const priceEl = marketItem.querySelector('.market-price');
+                        const changeEl = marketItem.querySelector('.market-change');
+
+                        priceEl.textContent = '$' + parseFloat(data.lastPrice).toLocaleString('en-US', {minimumFractionDigits: 2});
+
+                        const change = parseFloat(data.priceChangePercent).toFixed(2);
+                        changeEl.textContent = (change >= 0 ? '+' : '') + change + '%';
+                        changeEl.className = 'market-change ' + (change >= 0 ? 'positive' : 'negative');
+
+                        // Update header if current symbol
+                        if (symbol === currentSymbol.replace('BINANCE:', '')) {
+                            document.getElementById('currentPrice').textContent = '$' + parseFloat(data.lastPrice).toLocaleString('en-US', {minimumFractionDigits: 2});
+                            document.getElementById('priceChange').textContent = (change >= 0 ? '+' : '') + change + '%';
+                            document.getElementById('priceChange').className = 'pair-change ' + (change >= 0 ? 'positive' : 'negative');
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error fetching price for', symbol, error);
+                }
+            }
+        }
+
+        // Animate orderbook
+        function animateOrderBook() {
+            const asks = document.querySelectorAll('.asks .order-row');
+            const bids = document.querySelectorAll('.bids .order-row');
+
+            asks.forEach(row => {
+                const depth = Math.random() * 80 + 20;
+                row.style.setProperty('--depth', depth + '%');
+            });
+
+            bids.forEach(row => {
+                const depth = Math.random() * 80 + 20;
+                row.style.setProperty('--depth', depth + '%');
+            });
+        }
+
+        // Initialize on load
+        window.addEventListener('load', function() {
+            console.log('🚀 Initializing TradingView widget...');
+            initTradingView(currentSymbol);
+            updateMarketPrices();
+            animateOrderBook();
+
+            // Update prices every 10 seconds
+            setInterval(updateMarketPrices, 10000);
+
+            // Animate orderbook
+            setInterval(animateOrderBook, 2000);
+        });
+    </script>
+</body>
+</html>

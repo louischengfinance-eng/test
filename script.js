@@ -54,77 +54,118 @@ function showError(message) {
 function initChart() {
     console.log('🎨 Initializing chart...');
 
-    chart = LightweightCharts.createChart(chartElement, {
-        width: chartElement.clientWidth,
-        height: chartElement.clientHeight,
-        layout: {
-            background: { color: '#0f1419' },
-            textColor: '#8b8e93',
-        },
-        grid: {
-            vertLines: { color: '#1a1f26' },
-            horzLines: { color: '#1a1f26' },
-        },
-        crosshair: {
-            mode: LightweightCharts.CrosshairMode.Normal,
-            vertLine: {
-                color: '#00ff88',
-                width: 1,
-                style: LightweightCharts.LineStyle.Dashed,
+    // Check if chart element exists and has dimensions
+    if (!chartElement) {
+        console.error('❌ Chart element not found!');
+        showError('圖表容器未找到，請刷新頁面');
+        return false;
+    }
+
+    const width = chartElement.clientWidth || 800;
+    const height = chartElement.clientHeight || 600;
+
+    console.log(`📐 Chart dimensions: ${width}x${height}`);
+
+    if (width === 0 || height === 0) {
+        console.warn('⚠️ Chart element has zero dimensions, using defaults');
+    }
+
+    try {
+        chart = LightweightCharts.createChart(chartElement, {
+            width: width,
+            height: height,
+            layout: {
+                background: { color: '#0f1419' },
+                textColor: '#8b8e93',
             },
-            horzLine: {
-                color: '#00ff88',
-                width: 1,
-                style: LightweightCharts.LineStyle.Dashed,
+            grid: {
+                vertLines: { color: '#1a1f26' },
+                horzLines: { color: '#1a1f26' },
             },
-        },
-        rightPriceScale: {
-            borderColor: '#1a1f26',
-        },
-        timeScale: {
-            borderColor: '#1a1f26',
-            timeVisible: true,
-            secondsVisible: false,
-        },
-    });
+            crosshair: {
+                mode: LightweightCharts.CrosshairMode.Normal,
+                vertLine: {
+                    color: '#00ff88',
+                    width: 1,
+                    style: LightweightCharts.LineStyle.Dashed,
+                },
+                horzLine: {
+                    color: '#00ff88',
+                    width: 1,
+                    style: LightweightCharts.LineStyle.Dashed,
+                },
+            },
+            rightPriceScale: {
+                borderColor: '#1a1f26',
+            },
+            timeScale: {
+                borderColor: '#1a1f26',
+                timeVisible: true,
+                secondsVisible: false,
+            },
+        });
 
-    // Create candlestick series
-    candlestickSeries = chart.addCandlestickSeries({
-        upColor: '#00ff88',
-        downColor: '#ff4444',
-        borderUpColor: '#00ff88',
-        borderDownColor: '#ff4444',
-        wickUpColor: '#00ff88',
-        wickDownColor: '#ff4444',
-    });
-
-    // Create volume series
-    volumeSeries = chart.addHistogramSeries({
-        color: '#26a69a',
-        priceFormat: {
-            type: 'volume',
-        },
-        priceScaleId: '',
-        scaleMargins: {
-            top: 0.8,
-            bottom: 0,
-        },
-    });
-
-    // Update stats on crosshair move
-    chart.subscribeCrosshairMove((param) => {
-        if (param.time) {
-            const data = param.seriesData.get(candlestickSeries);
-            const volumePoint = param.seriesData.get(volumeSeries);
-
-            if (data) {
-                const symbol = currentSymbol.replace('USDT', '');
-                updateStatsDisplay(data, volumePoint, symbol);
-            }
+        if (!chart) {
+            throw new Error('Failed to create chart instance');
         }
-    });
 
-    console.log('✅ Chart initialized');
+        console.log('✅ Chart instance created');
+
+        // Create candlestick series
+        candlestickSeries = chart.addCandlestickSeries({
+            upColor: '#00ff88',
+            downColor: '#ff4444',
+            borderUpColor: '#00ff88',
+            borderDownColor: '#ff4444',
+            wickUpColor: '#00ff88',
+            wickDownColor: '#ff4444',
+        });
+
+        if (!candlestickSeries) {
+            throw new Error('Failed to create candlestick series');
+        }
+
+        console.log('✅ Candlestick series created');
+
+        // Create volume series
+        volumeSeries = chart.addHistogramSeries({
+            color: '#26a69a',
+            priceFormat: {
+                type: 'volume',
+            },
+            priceScaleId: '',
+            scaleMargins: {
+                top: 0.8,
+                bottom: 0,
+            },
+        });
+
+        if (!volumeSeries) {
+            throw new Error('Failed to create volume series');
+        }
+
+        console.log('✅ Volume series created');
+
+        // Update stats on crosshair move
+        chart.subscribeCrosshairMove((param) => {
+            if (param.time) {
+                const data = param.seriesData.get(candlestickSeries);
+                const volumePoint = param.seriesData.get(volumeSeries);
+
+                if (data) {
+                    const symbol = currentSymbol.replace('USDT', '');
+                    updateStatsDisplay(data, volumePoint, symbol);
+                }
+            }
+        });
+
+        console.log('✅ Chart initialized successfully');
+        return true;
+    } catch (error) {
+        console.error('❌ Error initializing chart:', error);
+        showError(`圖表初始化失敗: ${error.message}`);
+        return false;
+    }
 }
 
 // Update stats display
@@ -306,6 +347,15 @@ async function loadMarket(symbol, interval) {
     showLoading();
 
     try {
+        // Check if chart is initialized
+        if (!chart || !candlestickSeries || !volumeSeries) {
+            console.error('❌ Chart not properly initialized!');
+            console.log('Chart:', chart);
+            console.log('Candlestick Series:', candlestickSeries);
+            console.log('Volume Series:', volumeSeries);
+            throw new Error('圖表未正確初始化，請刷新頁面重試');
+        }
+
         // Fetch historical data
         const data = await fetchKlineData(symbol, interval);
 
@@ -314,6 +364,8 @@ async function loadMarket(symbol, interval) {
 
             // Set chart data
             console.log('📈 Setting chart data...');
+            console.log(`📊 Data points: ${data.candleData.length} candles, ${data.volumeData.length} volumes`);
+
             candlestickSeries.setData(data.candleData);
             volumeSeries.setData(data.volumeData);
 
@@ -466,16 +518,25 @@ function initialize() {
     console.log('🎬 Starting initialization...');
 
     // Initialize chart
-    initChart();
+    const chartInitialized = initChart();
 
-    // Load initial market data
-    loadMarket(currentSymbol, currentInterval);
+    if (!chartInitialized) {
+        console.error('❌ Chart initialization failed, cannot continue');
+        showError('圖表初始化失敗，請刷新頁面重試');
+        return;
+    }
 
-    // Initial market list update
-    updateMarketList();
+    // Small delay to ensure chart is ready
+    setTimeout(() => {
+        // Load initial market data
+        loadMarket(currentSymbol, currentInterval);
 
-    // Initial orderbook animation
-    animateOrderBook();
+        // Initial market list update
+        updateMarketList();
 
-    console.log('✅ Initialization complete!');
+        // Initial orderbook animation
+        animateOrderBook();
+
+        console.log('✅ Initialization complete!');
+    }, 100);
 }
