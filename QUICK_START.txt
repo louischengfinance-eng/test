@@ -39,7 +39,11 @@
 ────────────────────────────────────────
   在瀏覽器地址欄輸入：
 
-  http://localhost:9000/test.html   ← 先測試這個
+  【推薦】TradingView 專業版（開箱即用）
+  http://localhost:9000/index-tradingview.html
+
+  【或】原版（Binance API，可自定義）
+  http://localhost:9000/test.html   ← 先測試 API
   http://localhost:9000             ← 然後打開主頁
 
 
@@ -84,17 +88,47 @@
 
 ═══════════════════════════════════════════════════════════════════
 
-  index.html      - 主網站
-  test.html       - API 連接測試工具
+  【網站文件 - 兩個版本可選】
+  index.html              - 原版（Binance API）
+  index-tradingview.html  - TradingView 專業版 ⭐推薦
+  test.html               - API 連接測試工具
+
+  【代碼文件】
   script.js       - 主邏輯（連接 Binance API）
   style.css       - Hyperliquid 風格樣式
 
+  【文檔】
   START_HERE.md   - 詳細啟動教程（推薦閱讀）
+  VERSION_GUIDE.md - 版本選擇指南 ⭐
   QUICK_START.txt - 這個文件（快速參考）
   README.md       - 完整項目文檔
 
+  【啟動腳本】
   start.sh        - Linux/Mac 啟動腳本
   start.bat       - Windows 啟動腳本
+
+
+═══════════════════════════════════════════════════════════════════
+
+💡 版本選擇
+
+═══════════════════════════════════════════════════════════════════
+
+  🎨 TradingView 版本（推薦新手）
+  ✓ 開箱即用，無需配置
+  ✓ 100+ 專業技術指標
+  ✓ 完整繪圖工具
+  ✓ 非常穩定
+  ➜ http://localhost:9000/index-tradingview.html
+
+  🔧 原版（推薦開發者）
+  ✓ 完全自定義代碼
+  ✓ 學習 API 集成
+  ✓ 輕量快速
+  ✓ 完全控制
+  ➜ http://localhost:9000/index.html
+
+  詳細對比請看：VERSION_GUIDE.md
 
 
 ═══════════════════════════════════════════════════════════════════
