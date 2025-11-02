@@ -37,14 +37,21 @@
 
 第 3 步：打開瀏覽器
 ────────────────────────────────────────
-  在瀏覽器地址欄輸入：
+  【💻 電腦端】在瀏覽器地址欄輸入：
 
-  【推薦】TradingView 專業版（開箱即用）
+  TradingView 專業版（推薦）
   http://localhost:9000/index-tradingview.html
 
-  【或】原版（Binance API，可自定義）
-  http://localhost:9000/test.html   ← 先測試 API
-  http://localhost:9000             ← 然後打開主頁
+  原版（Binance API）
+  http://localhost:9000/index.html
+
+  【📱 手機端】連接同一 WiFi，輸入：
+  http://你的電腦IP:9000/mobile-test.html  ← 先測試
+  http://你的電腦IP:9000/index-tradingview.html
+
+  查看電腦 IP：
+  Windows: ipconfig
+  Mac/Linux: ifconfig
 
 
 ═══════════════════════════════════════════════════════════════════
