@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hyperliquid Style K-Line Chart</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="logo">
+                <h1>HYPERLIQUID</h1>
+            </div>
+            <div class="trading-pair">
+                <span class="pair-name">BTC/USD</span>
+                <span class="pair-price" id="currentPrice">--</span>
+                <span class="pair-change" id="priceChange">--</span>
+            </div>
+            <div class="header-right">
+                <button class="btn-primary">Connect Wallet</button>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <div class="left-panel">
+                <div class="market-list">
+                    <h3>Markets</h3>
+                    <div class="market-item active">
+                        <div class="market-info">
+                            <span class="market-name">BTC/USD</span>
+                            <span class="market-price">$43,250.00</span>
+                        </div>
+                        <span class="market-change positive">+2.45%</span>
+                    </div>
+                    <div class="market-item">
+                        <div class="market-info">
+                            <span class="market-name">ETH/USD</span>
+                            <span class="market-price">$2,280.50</span>
+                        </div>
+                        <span class="market-change negative">-1.23%</span>
+                    </div>
+                    <div class="market-item">
+                        <div class="market-info">
+                            <span class="market-name">SOL/USD</span>
+                            <span class="market-price">$98.75</span>
+                        </div>
+                        <span class="market-change positive">+5.67%</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <div class="chart-header">
+                    <div class="timeframe-selector">
+                        <button class="timeframe-btn" data-timeframe="1m">1m</button>
+                        <button class="timeframe-btn" data-timeframe="5m">5m</button>
+                        <button class="timeframe-btn" data-timeframe="15m">15m</button>
+                        <button class="timeframe-btn" data-timeframe="1h">1h</button>
+                        <button class="timeframe-btn active" data-timeframe="4h">4h</button>
+                        <button class="timeframe-btn" data-timeframe="1d">1D</button>
+                        <button class="timeframe-btn" data-timeframe="1w">1W</button>
+                    </div>
+                    <div class="chart-tools">
+                        <button class="tool-btn">📊 Indicators</button>
+                        <button class="tool-btn">⚙️ Settings</button>
+                    </div>
+                </div>
+                <div id="chart"></div>
+                <div class="chart-stats">
+                    <div class="stat-item">
+                        <span class="stat-label">O</span>
+                        <span class="stat-value" id="open">--</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">H</span>
+                        <span class="stat-value" id="high">--</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">L</span>
+                        <span class="stat-value" id="low">--</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">C</span>
+                        <span class="stat-value" id="close">--</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Volume</span>
+                        <span class="stat-value" id="volume">--</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="right-panel">
+                <div class="order-book">
+                    <h3>Order Book</h3>
+                    <div class="orderbook-header">
+                        <span>Price (USD)</span>
+                        <span>Size (BTC)</span>
+                        <span>Total</span>
+                    </div>
+                    <div class="asks">
+                        <div class="order-row ask">
+                            <span class="price">43,285.50</span>
+                            <span class="size">0.5420</span>
+                            <span class="total">23,468.74</span>
+                        </div>
+                        <div class="order-row ask">
+                            <span class="price">43,280.00</span>
+                            <span class="size">1.2340</span>
+                            <span class="total">53,407.52</span>
+                        </div>
+                        <div class="order-row ask">
+                            <span class="price">43,275.25</span>
+                            <span class="size">0.8920</span>
+                            <span class="total">38,601.52</span>
+                        </div>
+                    </div>
+                    <div class="spread">
+                        <span class="spread-price">43,250.00</span>
+                        <span class="spread-value">Spread: 5.50</span>
+                    </div>
+                    <div class="bids">
+                        <div class="order-row bid">
+                            <span class="price">43,244.50</span>
+                            <span class="size">1.4560</span>
+                            <span class="total">62,964.03</span>
+                        </div>
+                        <div class="order-row bid">
+                            <span class="price">43,240.00</span>
+                            <span class="size">0.7820</span>
+                            <span class="total">33,813.68</span>
+                        </div>
+                        <div class="order-row bid">
+                            <span class="price">43,235.75</span>
+                            <span class="size">2.1100</span>
+                            <span class="total">91,227.43</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
